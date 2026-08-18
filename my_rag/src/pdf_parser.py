@@ -43,23 +43,23 @@ def detect_pdf_type( pdf_path: Path) -> PdfType:
     #打开文件，确定出需要检查的页码
     with pymupdf.open(pdf_path) as doc:
         page_indices = sample_page_indices(doc.page_count)
-    if not page_indices:
-        return "scan_pdf"
+        if not page_indices:
+            return "scan_pdf"
 
-    vaild_text_pages = 0
-    for page_index in page_indices:
+        vaild_text_pages = 0
+        for page_index in page_indices:
 
-        #读取page_index这一页
-        page = doc.load_page(page_index)
+            #读取page_index这一页
+            page = doc.load_page(page_index)
 
-        #提取这一页的文本text
-        text = page.get_text("text").strip()  #text是设定的参数，按照纯文本模式提取文字
+            #提取这一页的文本text
+            text = page.get_text("text").strip()  #text是设定的参数，按照纯文本模式提取文字
 
-        #计算这一页的字数
-        char_count = count_effective_charact(text)
+            #计算这一页的字数
+            char_count = count_effective_charact(text)
 
-        if char_count >= CONFIG.text_pages_min_charact:
-            vaild_text_pages += 1
+            if char_count >= CONFIG.text_pages_min_charact:
+                vaild_text_pages += 1
     text_radio = vaild_text_pages / len(page_indices)
 
     if text_radio >= CONFIG.text_pdf_ratio:
@@ -75,7 +75,7 @@ def get_ocr_reader() -> easyocr.Reader:
 
     if _ocr_loader is None:
         _ocr_loader = easyocr.Reader(
-            ["ch-sim", "en"],
+            ["ch_sim", "en"],
             gpu = CONFIG.ocr_gpu
         )
     return _ocr_loader
@@ -87,7 +87,7 @@ def ocr_page(page: pymupdf.Page) -> str:    #接受一页pdf，返回text内容
     #将pdf放大
     matrix = pymupdf.Matrix(
         CONFIG.ocr_zoom,
-        CONFIG.ocr.zoom
+        CONFIG.ocr_zoom
     )
 
     #将pdf转换为图片, page.get_pixmap()将pdf页渲染成图片
@@ -178,7 +178,7 @@ def extract_pages(pdf_path:Path, pdf_type:PdfType) -> list[PageRecord]:
                 PageRecord(
                     page = page_index + 1,
                     text = text,
-                    ectraction_method= extract_methond
+                    extraction_method= extract_methond
                 )
             )
     return pages
@@ -203,7 +203,7 @@ def extract_tabel(pdf_path:Path, pdf_type:PdfType) -> list[TableRecord]:
                         cell if cell is not None else ""
                         for cell in row
                     ]
-                    for row in rows
+                    for row in tabel
                     if row
                 ]
                 records.append(

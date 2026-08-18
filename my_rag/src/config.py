@@ -7,7 +7,7 @@ from dataclasses import dataclass
 #config.py是在src文件中，parents[1]是返回两层文件夹，也就是返回到my_rag文件夹的路径
 PROJECT_PATH = Path(__file__).resolve().parents[1] 
 DATA_PATH = PROJECT_PATH / "data"
-OUTPUT_DATA = DATA_PATH / "output"
+OUTPUT_DATA = PROJECT_PATH / "output"
 CHUNK_DATA = OUTPUT_DATA / "chunks.json"
 
 

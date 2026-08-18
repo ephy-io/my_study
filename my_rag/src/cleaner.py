@@ -1,5 +1,9 @@
 
-#清洗数据
+#清洗数据的总体思路：
+# 1、确定出标题和每一页的样式
+# 2、将文本标准化，找出页眉页脚，判断是不是标题，将清晰好的文本进行拼接
+# 3、清晰每一页的内容，清晰pdf的所有页
+# 4、清洗表格中的一格，再清洗每一个表格，清洗全部表格
 
 import math
 import re
@@ -11,7 +15,7 @@ from config import CONFIG
 
 #确定出标题的样式
 HEADING_PATTERN =re.compile(
-    r"^(",      #从这一行开始
+    r"^("     #从这一行开始
     r"第[一二三四五六七八九十百0-9]+[章节条]"     #第一章
     r"|[一二三四五六七八九十0-9]+、"            #1、
     r"|[（(]+[一二三四五六七八九十百0-9]+[）)]"     #（1）
@@ -31,7 +35,7 @@ PAGE_NUMBER_PATTERN = re.compile(
 def normalize_unicode(text:str) -> str:
     text = unicodedata.normalize(
         "NFKC",
-        "text"
+        text
     )
     text = text.replace("\u00a0"," ")
     text = text.replace("\u00ad", "")
@@ -49,7 +53,7 @@ def find_repeat_boundary_line(pages:list[PageRecord]) -> set[str]:
 
     counter : Counter[str] = Counter()  #counter是一个字典
     #遍历每一页的行
-    for page in range(pages):
+    for page in pages:
         lines = [
             line.strip()
             for line in normalize_unicode(page.text).splitlines()   #将每一页的内容进行统一标准化，然后按行分开
@@ -98,6 +102,7 @@ def reflow_lines(lines:list[str]) -> str:
         #判断列表是不是空，为空则直接加入到列表中
         if not previous_lines:
             previous_lines.append(line)
+            continue
 
         #判断是不是标题
         if is_heading_line(line):
@@ -114,12 +119,12 @@ def reflow_lines(lines:list[str]) -> str:
 
         #判断列表中红的最后一个元素中是否带有结束的符号
         if re.search(
-            r"^[。！？；：.!?;:]$",
+            r"[。！？；：.!?;:]$",
             previous
         ):
             previous_lines.append(line)
         #不是标题，且上一句没有结束标志，则认为跟上一句是同一句话，直接拼接在上一句的后面
-        previous_lines[-1]+ line
+        previous_lines[-1] = previous + line
 
     return "\n".join(previous_lines)
 
@@ -134,7 +139,7 @@ def clean_page_text(text:str, repeat_line:set[str]) -> str:
     #遍历text文本中的每一行
     for line in text.splitlines():
         line = re.sub(
-                    r"[\t]+",
+                    r"[ \t]+",
                     " ",
                     line
                 ).strip()
@@ -161,7 +166,7 @@ def clean_pages(pages:list[PageRecord]) -> list[PageRecord]:
 
     for page in pages:
         clean_page = clean_page_text(
-            page,
+            page.text,
             repeat_line
         )
 
@@ -219,11 +224,11 @@ def clean_tabel(table:TableRecord) -> list[TabelRowsRecord]:
         for clum_index, value in enumerate(row):
             if not value:
                 continue
-            if clum_index < len(head) and heads[clum_index]:
+            if clum_index < len(heads) and heads[clum_index]:
                 head = heads[clum_index]
 
             else:
-                head = f"字段{row_index + 1}"
+                head = f"字段{clum_index + 1}"
             #将有内容的加入
             part.append( f"{head}: {value}")
         if not part:

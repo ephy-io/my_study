@@ -32,7 +32,7 @@ def creat_text_spliter() -> RecursiveCharacterTextSplitter:
 def text_chunks(pages:list[PageRecord], source: str, pdf_typ:PdfType) -> list[Document]:
     #将文本转为Document类型
     pages_doucuments = [
-        [
+        
             Document(
                 page_content=page.text,
                 metadata = {
@@ -43,7 +43,7 @@ def text_chunks(pages:list[PageRecord], source: str, pdf_typ:PdfType) -> list[Do
                     "extract_method" : page.extraction_method
                     }
             )
-        ]
+        
         for page in pages
     ]
 

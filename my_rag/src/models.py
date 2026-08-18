@@ -14,7 +14,7 @@ PdfType = [
 class PageRecord:
     page : int   #页码
     text : str   #内容
-    ectraction_method : Literal["text", "orc"]   #提取内容的方法
+    extraction_method : Literal["text", "orc"]   #提取内容的方法
 
 #每一个表格的记录
 @dataclass

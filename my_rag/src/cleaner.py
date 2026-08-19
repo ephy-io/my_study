@@ -79,7 +79,7 @@ def find_repeat_boundary_line(pages:list[PageRecord]) -> set[str]:
     return { 
         line
         for line , count in counter.items()
-        if count > threshold
+        if count >= threshold
     }
 
 #判断是不是标题
@@ -123,6 +123,7 @@ def reflow_lines(lines:list[str]) -> str:
             previous
         ):
             previous_lines.append(line)
+            continue
         #不是标题，且上一句没有结束标志，则认为跟上一句是同一句话，直接拼接在上一句的后面
         previous_lines[-1] = previous + line
 
@@ -246,13 +247,47 @@ def clean_tabel(table:TableRecord) -> list[TabelRowsRecord]:
 
 #遍历清洗所有表格
 def clean_tabls(tabels:list[TableRecord]) -> list[TabelRowsRecord]:
-    rows : list[TabelRowsRecord] = []  
+    rows = []
 
-    #把后面对象里的元素，一个一个加到当前列表末尾。
+    previous_heads = None
+    previous_page = None
+    previous_tabel_index = None
+
     for tabel in tabels:
-        rows.extend(
-            clean_tabel(tabel)
-        )  
+
+        first_row = (
+            [clean_tabel_cell(cell) for cell in tabel.rows[0]]
+            if tabel.rows else []
+        )
+
+        first_cell = first_row[0] if first_row else ""
+
+        is_continuation = (
+            previous_heads is not None
+            and tabel.page == previous_page + 1
+            and tabel.tabel_index == previous_tabel_index
+            and re.fullmatch(r"\d+", first_cell)
+            and len(first_row) == len(previous_heads)
+        )
+
+        if is_continuation:
+            temp_tabel = TableRecord(
+                page=tabel.page,
+                tabel_index=tabel.tabel_index,
+                rows=[previous_heads, *tabel.rows]
+            )
+
+            rows.extend(clean_tabel(temp_tabel))
+
+        else:
+            rows.extend(clean_tabel(tabel))
+
+            if first_row:
+                previous_heads = first_row
+
+        previous_page = tabel.page
+        previous_tabel_index = tabel.tabel_index
+
     return rows
  
                 
@@ -261,4 +296,3 @@ def clean_tabls(tabels:list[TableRecord]) -> list[TabelRowsRecord]:
 
 
     
-

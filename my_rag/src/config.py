@@ -1,4 +1,6 @@
 
+import os
+from dotenv import load_dotenv
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -10,6 +12,7 @@ DATA_PATH = PROJECT_PATH / "data"
 OUTPUT_DATA = PROJECT_PATH / "output"
 CHUNK_DATA = OUTPUT_DATA / "chunks.json"
 
+load_dotenv(dotenv_path=PROJECT_PATH / ".env")
 
 @dataclass(frozen= True)
 class Config:
@@ -31,6 +34,25 @@ class Config:
     #数据切分
     chunk_size : int=800
     chunk_overlap : int=120
+
+    dashscope_api_key : str = os.getenv("DASHSCOPE_API_KEY", "")
+    dashscope_base_url : str = os.getenv("DASHSCOPE_BASE_URL", "")
+    embedding_model : str = os.getenv("DASHSCOPE_EMBEDDING_MODEL", "")
+    chat_model : str = os.getenv("DASHSCOPE_CHAT_MODEL", "")
+
+    #embedding的最大维度,一次处理多少条chunks
+    embedding_dimension :int = 1024
+    embedding_batch_size : int = 20
+
+    qdrant_url : str = os.getenv("QDRANT_ URL", "http//localhost:6333")
+    qdrant_key : str = os.getenv("QDRANT_KEY", "")
+
+    qdrant_collection : str = "rag_chunks"
+
+    retrieval_top_k : int = 5
+
+    cros_origins : str = os.getenv("CROS_ORIGINS", "http//localhost:8501")
+    
 
 CONFIG = Config()
 
